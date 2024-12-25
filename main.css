@@ -1,0 +1,29 @@
+.card{
+    background-color: #f8f9fa;
+    border: 0px solid #f8f9fa;
+    border-radius: 8px;
+    margin: 2px;
+    padding: 0px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.5s;
+}
+
+.card:hover {
+    transform: translate(0px, -17vh) scale(2);
+}
+
+.battlefieldcard{
+    background-color: #f8f9fa;
+    border: 0px solid #f8f9fa;
+    border-radius: 8px;
+    margin: 2px;
+    padding: 0px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.5s;
+}
+
+.battlefieldcard:hover {
+    transform: translate(6vh, 9vh) scale(1.8);
+}
