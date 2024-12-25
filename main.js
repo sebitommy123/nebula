@@ -36,6 +36,7 @@ async function game_launch() {
     render_battlefield("p1");
     render_battlefield("p2");
     render_next_turn_button();
+    render_mana_tally();
 
     /*
     await getServerKey("gamestate"); 
@@ -78,7 +79,7 @@ let list_of_cards = [
         image: "Terrible Terror.png",
         elements: ["element 1", "element 2"],
         card_type: "type 1",
-        mana_cost: 1,
+        mana_cost: 6,
         rarity: "common",
         power: 40,
         HP: 130,
@@ -103,7 +104,7 @@ let list_of_cards = [
         image: "Tidalox.png",
         elements: ["element 1", "element 2"],
         card_type: "type 1",
-        mana_cost: 1,
+        mana_cost: 13,
         rarity: "common",
         power: 200,
         HP: 280,
@@ -128,7 +129,7 @@ let list_of_cards = [
         image: "Gravlok.png",
         elements: ["element 1", "element 2"],
         card_type: "type 1",
-        mana_cost: 1,
+        mana_cost: 5,
         rarity: "common",
         power: 50,
         HP: 200,
@@ -156,6 +157,7 @@ async function game_load() {
     let player_1_deck = get_deck();
     let player_2_deck = get_deck();
     let turn = "p1";
+    let defending_turn = null;
     gamestate = {
         isnull: false,
         player_1_deck: player_1_deck,
@@ -163,12 +165,13 @@ async function game_load() {
         player_2_deck: player_2_deck,
         player_2_hand: get_initial_hand(player_2_deck),
         turn: turn,
+        defending_turn: defending_turn,
         player_1_battlefield: [],
         player_2_battlefield: [],
-        player_1_mana_tally: 0,
-        player_2_mana_tally: 0,
-        player_1_coin_tally: 0,
-        player_2_coin_tally: 0,
+        player_1_mana_tally: 10,
+        player_2_mana_tally: 10,
+        player_1_coin_tally: 9,
+        player_2_coin_tally: 9,
     };
     await setServerKey("gamestate", gamestate);
     Main_Menu_div.style.display = "none";
@@ -178,6 +181,7 @@ async function game_load() {
     render_battlefield("p1");
     render_battlefield("p2");
     render_next_turn_button();
+    render_mana_tally();
 }
 
 async function download_gamestate() {
@@ -188,6 +192,7 @@ async function download_gamestate() {
             render_battlefield("p1");
             render_battlefield("p2");
             render_next_turn_button();
+            render_mana_tally();
         }
     }
 }
@@ -198,6 +203,10 @@ function are_jsons_equal(json1, json2) {
 
 function is_it_my_turn() {
     return gamestate.turn == IAM;
+}
+
+function is_it_my_time_to_defend() {
+    return gamestate.defending_turn == IAM;
 }
 
 function get_deck() {
@@ -237,11 +246,13 @@ async function render_mana_tally() {
     else {
         mana_tally = gamestate.player_2_mana_tally;
         coin_tally = gamestate.player_2_coin_tally;
-    } // add mana image and coin image
+    } 
     resources_bar.innerHTML = ` 
     <img src="images/mana.png" alt="Mana Image" style="height:5vh"> ${mana_tally}
     <img src="images/coin.png" alt="Coin Image" style="height:5vh"> ${coin_tally}
     `;
+
+}
 
 
 
@@ -302,6 +313,14 @@ async function render_next_turn_button() {
     }
 }
 
+async function attack_with_creature() {
+    if (is_it_my_turn() == false) {
+        alert("It is not your turn");
+        return;
+    } else {
+
+    }
+}
 
 
 async function render_cards() {
@@ -322,17 +341,34 @@ async function render_cards() {
             if (is_it_my_turn() == false) {
                 alert("It is not your turn");
                 return;
-            }
-            let approval = confirm("Do you want to play this card?");
+            } 
+            let mana_cost = card.mana_cost;
+            let approval = confirm(`Do you want to play this card? It costs: ${mana_cost} mana`);
+            
             if (approval == true) {
                 console.log("Card selected");
                 if (IAM == "p1") {
-                    gamestate.player_1_hand.splice(gamestate.player_1_hand.indexOf(card), 1);
-                    gamestate.player_1_battlefield.push(card);
+                    if (gamestate.player_1_mana_tally >= mana_cost) {
+                        gamestate.player_1_hand.splice(gamestate.player_1_hand.indexOf(card), 1);
+                        gamestate.player_1_battlefield.push(card);
+                        gamestate.player_1_mana_tally -= mana_cost;
+                        render_mana_tally();
+                    }
+                    else {
+                        alert("You dont have enough mana")
+                    }
                 }
                 else {
-                    gamestate.player_2_hand.splice(gamestate.player_2_hand.indexOf(card), 1);
-                    gamestate.player_2_battlefield.push(card);
+                    if (gamestate.player_2_mana_tally >= mana_cost) {
+                        gamestate.player_2_hand.splice(gamestate.player_2_hand.indexOf(card), 1);
+                        gamestate.player_2_battlefield.push(card);
+                        gamestate.player_2_battlefield[card]
+                        gamestate.player_2_mana_tally -= mana_cost;
+                        render_mana_tally();
+                    }
+                    else {
+                        alert("You dont have enough mana")
+                    }
                 }
                 setServerKey("gamestate", gamestate);
                 render_cards();
