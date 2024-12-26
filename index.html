@@ -1,0 +1,41 @@
+<body style="margin: 0px; overflow: hidden;">
+    <link rel="stylesheet" href="main2.css">
+<div>
+    <div id="mainMenu">
+        <h1>Welcome to NEBULA</h1>
+        <h2>NEBULA - To The Game</h2>
+        <button onclick="create_new_game()">Create a new game and start as player 1</button>
+        <button onclick="join_game('p1')">Join game as player 1</button>
+        <button onclick="join_game('p2')">Join game as player 2</button>
+
+    </div>
+
+    <div id="loadingMenu" style="display:none;">
+        <h1>Waiting for player 2...</h1>
+        <h2>1/2</h2>
+        <img src="images/lobby.gif"/>
+    </div>
+
+    <div id="gameMenu" style="display:none;">
+        <div style="display:flex; flex-direction: row;">
+            <div style="display:flex; flex-direction: column; width: 80vw">
+                <div id="resources_bar" style="display:flex; flex-direction: row; height:6vh; align-items: center;"></div>
+                <div id="opponent_battlefield" style="display:flex; flex-direction: row; height:40vh; justify-content:center; align-items: center; flex-wrap: wrap; border: 1px solid black; overflow-y: scroll;"></div>
+                <div id="player_battlefield" style="display:flex; flex-direction: row; height:40vh; justify-content:center; align-items: center; flex-wrap: wrap; border: 1px solid black; overflow-y: scroll;"></div>
+                <div id="player_cards" style="display:flex; flex-direction: row; justify-content:center; height:14vh;"> </div>
+            </div>
+            <div style="display:flex; flex-direction: column; width: 20vw;">
+                <div id="shop" style="display:flex; flex-direction: column; height: 85vh;"></div>
+                <div id="fun_buttons" style="display:flex; flex-direction: row; height: 15vh;">
+                    <button id='next_turn_button' style="width: 100%;" onclick='next_turn()'>Next turn</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script src="coms.js"></script>
+<script src="axios.js"></script>
+<script src="config.js"></script>
+<script src="main2.js"></script>

@@ -1,0 +1,32 @@
+
+.card {
+    border: 0px solid #f8f9fa;
+    border-radius: 8px;
+}
+
+.hand_card {
+    cursor: pointer;
+    transition: transform 0.5s;
+    height: 100%;
+}
+
+.hand_card:hover {
+    transform: translate(0px, -10vh) scale(1.4);
+}
+
+.preview_card {
+    height: 100%;
+    border-radius: 20px;
+}
+
+.battlefield_card {
+    cursor: pointer;
+    transition: transform 0.5s;
+    height: 100%;
+}
+
+.battlefield_card:hover {
+    transform: translate(0px, 0px) scale(1.4);
+}
+
+

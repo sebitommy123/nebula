@@ -254,11 +254,6 @@ async function render_mana_tally() {
 
 }
 
-
-
-
-
-
 async function render_battlefield(player) {
     let battlefield = null;
     if (player == "p1") {
@@ -281,7 +276,10 @@ async function render_battlefield(player) {
         <img src="images/${card.image}" alt="Card Image" style="height:22vh" class="battlefieldcard">
         `;
         the_div.appendChild(card_span);
+        card_span.onclick = attack_with_card;
     }        
+    
+
 }
 
 async function change_turn() {
@@ -313,16 +311,6 @@ async function render_next_turn_button() {
     }
 }
 
-async function attack_with_creature() {
-    if (is_it_my_turn() == false) {
-        alert("It is not your turn");
-        return;
-    } else {
-
-    }
-}
-
-
 async function render_cards() {
     let hand = null;
     if (IAM == "p1") {
@@ -351,6 +339,8 @@ async function render_cards() {
                     if (gamestate.player_1_mana_tally >= mana_cost) {
                         gamestate.player_1_hand.splice(gamestate.player_1_hand.indexOf(card), 1);
                         gamestate.player_1_battlefield.push(card);
+                        let x = gamestate.player_1_battlefield.indexOf(card);
+                        gamestate.player_1_battlefield[x].untapped = true;
                         gamestate.player_1_mana_tally -= mana_cost;
                         render_mana_tally();
                     }
@@ -362,7 +352,8 @@ async function render_cards() {
                     if (gamestate.player_2_mana_tally >= mana_cost) {
                         gamestate.player_2_hand.splice(gamestate.player_2_hand.indexOf(card), 1);
                         gamestate.player_2_battlefield.push(card);
-                        gamestate.player_2_battlefield[card]
+                        let x = gamestate.player_2_battlefield.indexOf(card);
+                        gamestate.player_2_battlefield[x].untapped = true;
                         gamestate.player_2_mana_tally -= mana_cost;
                         render_mana_tally();
                     }
