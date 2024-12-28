@@ -5,6 +5,7 @@ const player_battlefield = document.getElementById("player_battlefield");
 const player_cards = document.getElementById("player_cards");
 const shop = document.getElementById("shop");
 const next_turn_button = document.getElementById("next_turn_button");
+const fighterDOM = document.getElementById("fighter");
 
 let currentShowingScreen = document.getElementById('mainMenu');
 let IAM;
@@ -40,20 +41,46 @@ function renderAll() {
     renderBattlefield("p1");
     renderBattlefield("p2");
     if (canIPlay()) {
+        next_turn_button.innerHTML = "Next turn";
+        next_turn_button.disabled = false;
+    } else if (canIDefend()) {
+        next_turn_button.innerHTML = "Defend";
         next_turn_button.disabled = false;
     } else {
+        next_turn_button.innerHTML = "Next turn";
         next_turn_button.disabled = true;
     }
 }
 
 async function next_turn() {
-    if (!canIPlay()) {
-        return;
+    if (canIPlay()) {
+        gamestate.stage = getEnemy();
+        renderAll();
+        await uploadGamestate();
+        waitForStageAndRender(IAM);
+    } else if (canIDefend()) {
+        const card = gamestate.battlefields[getEnemy()].find(c => c.fighting);
+        if (card == null) {
+            throw new Error("No card is fighting");
+        }
+        const defendingCards = gamestate.battlefields[IAM].filter(c => c.defending);
+        if (defendingCards.length > 1) {
+            alert("Fuck you just select one card bro");
+            return;
+        }
+        enemyCardToTarget.HP -= card.power;
+        card.HP -= enemyCardToTarget.power;
+        if (enemyCardToTarget.HP <= 0) {
+            gamestate.battlefields[getEnemy()] = gamestate.battlefields[getEnemy()].filter(c => c != enemyCardToTarget);
+        }
+        if (card.HP <= 0) {
+            gamestate.battlefields[IAM] = gamestate.battlefields[IAM].filter(c => c != card);
+        }
+        gamestate.stage = getEnemy();
+        renderAll();
+        await uploadGamestate();
+        waitForStageAndRender(IAM);
     }
-    gamestate.stage = gamestate.stage == "p1" ? "p2" : "p1";
-    renderAll();
-    await uploadGamestate();
-    waitForStageAndRender(IAM);
 }
 
 function renderResourceBar() {
@@ -82,6 +109,27 @@ function hidePreviewingCard() {
         previewingCard = null;
     }
 
+}
+
+
+async function moveCardToFightingPosition(card) {
+    card.fighting = true;
+    renderAll();
+    await uploadGamestate();
+}
+
+async function moveCardToDefendingPosition(card) {
+    card.defending = true;
+    renderAll();
+    await uploadGamestate();
+}
+
+async function askUserToSelectDefender() {
+    gamestate.stage = getEnemy();
+    gamestate.activity_type = "selectingDefender";
+    renderAll();
+    await uploadGamestate();
+    await waitForStageAndRender(IAM);
 }
 
 document.body.onkeydown = evt => {
@@ -156,6 +204,10 @@ function canIPlay() {
     return gamestate.activity_type == "playing" && gamestate.stage == IAM;
 }
 
+function canIDefend() {
+    return gamestate.activity_type == "selectingDefender" && gamestate.stage == IAM;
+}
+
 function renderHand() {
     previewingCard = null;
     player_cards.innerHTML = "";
@@ -209,9 +261,15 @@ function renderBattlefield(player) {
             bottom: 5;
             left: 40;
             background-color: wheat;
-        ">${card.power} | ${card.HP}</div>
+        ">${card.power} / ${card.HP}</div>
         `;
         const card_elm = createCardElm(card, right_div, "battlefield_card", non_right_div);
+        if (card.fighting) {
+            card_elm.style.border = "2px solid red";
+        }
+        if (card.defending) {
+            card_elm.style.border = "2px solid green";
+        }
         battlefield.appendChild(card_elm);
     }
 }

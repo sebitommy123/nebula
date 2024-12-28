@@ -125,30 +125,6 @@ function get_initial_hand(deck) {
     return hand;
 }
 
-async function onAttackRequested(card) {
-    if (gamestate.battlefields[getEnemy()].length == 0) {
-        await moveCardToFightingPosition(card);
-        await performAttackAnimation();
-        gamestate.health_points[getEnemy()] -= card.power;
-    } else {
-        await moveCardToFightingPosition(card);
-        const enemyCardToTarget = await askUserToSelectEnemy();
-        console.log(enemyCardToTarget);
-        const blockerCards = await askEnemyToPickBlockers();
-        console.log(blockerCards);
-
-        return;
-        enemyCardToTarget.HP -= card.power;
-        card.HP -= enemyCardToTarget.power;
-        if (enemyCardToTarget.HP <= 0) {
-            gamestate.battlefields[getEnemy()] = gamestate.battlefields[getEnemy()].filter(c => c != enemyCardToTarget);
-        }
-        if (card.HP <= 0) {
-            gamestate.battlefields[IAM] = gamestate.battlefields[IAM].filter(c => c != card);
-        }
-    }
-}
-
 function getInitialGamestate() {
     let player_1_deck = get_deck_for_player("<template1>");
     let player_2_deck = get_deck_for_player("<template2>");
@@ -181,6 +157,7 @@ function getInitialGamestate() {
             "p1": 1000,
             "p2": 1000,
         },
+        fightingScene: null,
     };
 }
 
@@ -188,10 +165,40 @@ function getActionsForCard(card) {
 
     let actions = [];
 
-    actions.push({
-        name: "attack",
-        onclick: onAttackRequested,
-    });
+    if (canIPlay()) {
+        async function onAttackRequested() {
+            if (gamestate.battlefields[getEnemy()].length == 0) {
+                gamestate.health_points[getEnemy()] -= card.power;
+            } else {
+                await moveCardToFightingPosition(card);
+                await askUserToSelectDefender();
+            }
+        }
+        actions.push({
+            name: "attack",
+            onclick: onAttackRequested,
+        });
+    }
+
+    if (canIDefend()) {
+        if (!card.defending) {
+            async function onDefendRequested() {
+                await moveCardToDefendingPosition(card);
+            }
+            actions.push({
+                name: "defend",
+                onclick: onDefendRequested,
+            });
+        } else {
+            async function onStopDefendingRequested() {
+                await moveCardToHand(card);
+            }
+            actions.push({
+                name: "stop defending",
+                onclick: onStopDefendingRequested,
+            });
+        }
+    }
 
     return actions;
 
