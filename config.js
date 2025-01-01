@@ -123,10 +123,13 @@ let list_of_cards = [
 
 let list_of_cards_2 = [
     {image: "First Aid Kit.png"},
+    {image: "First Aid Kit.png"},
     {image: "Antidote.png"},
     {image: "Antidote.png"},
     {image: "Antidote.png"},
     {image: "Mega Healing Potion.png"},
+    {image: "Band-Aid.png"},
+    {image: "Band-Aid.png"},
     {image: "Band-Aid.png"},
     {image: "Mindbloom Herb.png"},
     {image: "Defibrillator.png"},
