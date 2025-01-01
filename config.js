@@ -144,10 +144,6 @@ let list_of_cards_2 = [
 ]
 
 let list_of_cards_3 = [
-    {image: "Victory Relic.png"},
-    {image: "Victory Totem.png"},
-    {image: "Victory Totem.png"},
-    {image: "Victory Totem.png"},
     {image: "Mana Orb.png"},
     {image: "Gold Mine.png"},
     {image: "Mini Mech Turret.png"},
