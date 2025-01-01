@@ -70,9 +70,11 @@ function renderResourceBar(player) {
     <span style="margin-left: 10px; margin-right: 10px;">${player == "p1" ? "Player 1" : "Player 2"}</span>
     `;
     Object.keys(gamestate.counts).forEach(countName => {
+        /*
         if (hideForEnemy.includes(countName) && player != IAM) {
             return;
         }
+        */
         const count = gamestate.counts[countName][player];
         const div = document.createElement("div");
         div.style.marginRight = "10px";
