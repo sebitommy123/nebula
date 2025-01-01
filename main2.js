@@ -357,6 +357,10 @@ async function draw() {
         return;
     }
     if (canIPlay()) {
+        if (gamestate.decks[IAM].length == 0) {
+            alert("Deck is empty");
+            return;
+        }
         gamestate.hands[IAM].push(gamestate.decks[IAM].pop());
         renderAll();
         await uploadGamestate();
@@ -432,4 +436,16 @@ function renderShop() {
         shop_div.appendChild(card_elm);
     }
 
+}
+
+let lastAmount = 0;
+function flip() {
+    const probabilityOfHeads = parseFloat(prompt("Probability of heads?", lastAmount));
+    if (isNaN(probabilityOfHeads)) {
+        alert("Invalid input");
+        return;
+    }
+    lastAmount = probabilityOfHeads;
+    const result = Math.random() < probabilityOfHeads / 100;
+    alert(result ? "Heads" : "Tails");
 }

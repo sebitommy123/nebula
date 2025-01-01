@@ -36,6 +36,8 @@ let list_of_cards_3 = [
     {image: "Tidalox.png"},
 ]
 
+const EXTRA_DUMBASS_FEATURE = true;
+
 function get_deck_for_player(username) {
     let deck = [];
     for (let i = 0; i < 40; i++) {
@@ -78,6 +80,9 @@ function randomize_deck(deck){
 function get_initial_hand(deck) {
     let hand = [];
     for (let i = 0; i < 5; i++) {
+        if (deck.length == 0) {
+            break;
+        }
         hand.push(deck.pop());
     }
     return hand;
@@ -104,6 +109,13 @@ function getInitialGamestate() {
     let player_2_deck = get_deck_for_player("<template2>");
     player_1_deck = randomize_deck(player_1_deck);
     player_2_deck = randomize_deck(player_2_deck);
+
+    if (EXTRA_DUMBASS_FEATURE) {
+        player_1_deck = ["Terrible Terror.png"];
+        player_2_deck = ["Tidalox.png"];
+        player_1_deck = player_1_deck.map(img => ({...list_of_cards.find(c => c.image == img)}));
+        player_2_deck = player_2_deck.map(img => ({...list_of_cards.find(c => c.image == img)}));
+    }
 
     let shop_deck_1 = get_shop_deck_1();
     let shop_deck_2 = get_shop_deck_2();
