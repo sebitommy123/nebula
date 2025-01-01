@@ -1,10 +1,12 @@
 
-const resources_bar = document.getElementById("resources_bar");
+const resources_bar_p1 = document.getElementById("resources_bar_p1");
+const resources_bar_p2 = document.getElementById("resources_bar_p2");
 const opponent_battlefield = document.getElementById("opponent_battlefield");
 const player_battlefield = document.getElementById("player_battlefield");
 const player_cards = document.getElementById("player_cards");
-const shop = document.getElementById("shop");
+const shop_div = document.getElementById("shop");
 const next_turn_button = document.getElementById("next_turn_button");
+const draw_button = document.getElementById("draw_button");
 const fighterDOM = document.getElementById("fighter");
 
 let currentShowingScreen = document.getElementById('mainMenu');
@@ -36,19 +38,20 @@ async function create_new_game() {
 }
 
 function renderAll() {
-    renderResourceBar();
+    renderResourceBar("p1");
+    renderResourceBar("p2");
     renderHand();
     renderBattlefield("p1");
     renderBattlefield("p2");
+    renderShop();
     if (canIPlay()) {
         next_turn_button.innerHTML = "Next turn";
         next_turn_button.disabled = false;
-    } else if (canIDefend()) {
-        next_turn_button.innerHTML = "Defend";
-        next_turn_button.disabled = false;
+        draw_button.disabled = false;
     } else {
         next_turn_button.innerHTML = "Next turn";
         next_turn_button.disabled = true;
+        draw_button.disabled = true;
     }
 }
 
@@ -58,37 +61,40 @@ async function next_turn() {
         renderAll();
         await uploadGamestate();
         waitForStageAndRender(IAM);
-    } else if (canIDefend()) {
-        const card = gamestate.battlefields[getEnemy()].find(c => c.fighting);
-        if (card == null) {
-            throw new Error("No card is fighting");
-        }
-        const defendingCards = gamestate.battlefields[IAM].filter(c => c.defending);
-        if (defendingCards.length > 1) {
-            alert("Fuck you just select one card bro");
-            return;
-        }
-        enemyCardToTarget.HP -= card.power;
-        card.HP -= enemyCardToTarget.power;
-        if (enemyCardToTarget.HP <= 0) {
-            gamestate.battlefields[getEnemy()] = gamestate.battlefields[getEnemy()].filter(c => c != enemyCardToTarget);
-        }
-        if (card.HP <= 0) {
-            gamestate.battlefields[IAM] = gamestate.battlefields[IAM].filter(c => c != card);
-        }
-        gamestate.stage = getEnemy();
-        renderAll();
-        await uploadGamestate();
-        waitForStageAndRender(IAM);
     }
 }
 
-function renderResourceBar() {
+function renderResourceBar(player) {
+    let resources_bar = player == "p1" ? resources_bar_p1 : resources_bar_p2;
     resources_bar.innerHTML = `
-    <span style="margin-left: 10px; margin-right: 10px;">${IAM == "p1" ? "Player 1" : "Player 2"}</span>
-    <img src="images/mana.png" alt="Mana Image" style="height:5vh"> ${gamestate.mana_counts[IAM]}
-    <img src="images/coin.png" alt="Coin Image" style="height:5vh; margin-left: 10px; margin-right: 5px;"> ${gamestate.coin_counts[IAM]}
+    <span style="margin-left: 10px; margin-right: 10px;">${player == "p1" ? "Player 1" : "Player 2"}</span>
     `;
+    Object.keys(gamestate.counts).forEach(countName => {
+        if (hideForEnemy.includes(countName) && player != IAM) {
+            return;
+        }
+        const count = gamestate.counts[countName][player];
+        const div = document.createElement("div");
+        div.style.marginRight = "10px";
+        div.innerHTML = `
+        ${countName}: 
+        `;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.value = count;
+        if (canIPlay()) {
+            input.disabled = false;
+            input.onchange = async () => {
+                gamestate.counts[countName][player] = input.value;
+                renderResourceBar(player);
+                await uploadGamestate();
+            };
+        } else {
+            input.disabled = true;
+        }
+        div.appendChild(input);
+        resources_bar.appendChild(div);
+    });
 }
 
 let previewingCard = null;
@@ -214,25 +220,18 @@ function renderHand() {
     for (let card of gamestate.hands[IAM]) {
         let right_div = document.createElement("div");
         if (canIPlay()) {
-            if (card.mana_cost <= gamestate.mana_counts[IAM]) {
-                const playButton = document.createElement("button");
-                playButton.innerHTML = `
-                Play (${card.mana_cost} mana)
-                `;
-                playButton.onclick = async () => {
-                    gamestate.hands[IAM] = gamestate.hands[IAM].filter(c => c != card);
-                    card.tapped = false;
-                    gamestate.battlefields[IAM].push(card);
-                    gamestate.mana_counts[IAM] -= card.mana_cost;
-                    renderAll();
-                    await uploadGamestate();
-                };
-                right_div.appendChild(playButton);
-            } else {
-                right_div.innerHTML = `
-                <span style="color: red;">Not enough mana to play (${card.mana_cost} mana)</span>
-                `;
-            }
+            const playButton = document.createElement("button");
+            playButton.innerHTML = `
+            Play
+            `;
+            playButton.onclick = async () => {
+                gamestate.hands[IAM] = gamestate.hands[IAM].filter(c => c != card);
+                card.text = getDefaultText();
+                gamestate.battlefields[IAM].push({...card});
+                renderAll();
+                await uploadGamestate();
+            };
+            right_div.appendChild(playButton);
         }
         const card_elm = createCardElm(card, right_div, "hand_card");
         player_cards.appendChild(card_elm);
@@ -248,20 +247,50 @@ function renderBattlefield(player) {
     battlefield.innerHTML = "";
     for (let card of gamestate.battlefields[player]) {
         let right_div = document.createElement("div");
-        getActionsForCard(card).forEach(action => {
-            const actionButton = document.createElement("button");
-            actionButton.innerHTML = action.name;
-            actionButton.onclick = action.onclick;
-            right_div.appendChild(actionButton);
-        });
+        if (canIPlay()) {
+            right_div.innerHTML = `
+            <textarea style="height: 300px; width: 200px;">${card.text}</textarea>
+            <br>
+            <button class='save'>Save</button>
+            <button class='delete'>Delete card</button>
+            <button class='alternate'>Alternate owner</button>
+            `;
+            const saveButton = right_div.querySelector(".save");
+            const textarea = right_div.querySelector("textarea");
+            saveButton.onclick = async () => {
+                card.text = textarea.value;
+                renderAll();
+                await uploadGamestate();
+            }
+
+            const deleteButton = right_div.querySelector(".delete");
+            deleteButton.onclick = async () => {
+                if (!confirm("FR?")) {
+                    return;
+                }
+                gamestate.battlefields[player] = gamestate.battlefields[player].filter(c => c != card);
+                gamestate.extra_deck.push({...card});
+                renderAll();
+                await uploadGamestate();
+            }
+
+            const alternateButton = right_div.querySelector(".alternate");
+            alternateButton.onclick = async () => {
+                gamestate.battlefields[player] = gamestate.battlefields[player].filter(c => c != card);
+                gamestate.battlefields[player == "p1" ? "p2" : "p1"].push({...card});
+                renderAll();
+                await uploadGamestate();
+            }
+        } else {
+            right_div.innerHTML = `
+            <textarea disabled style="height: 300px; width: 200px;"
+            >${card.text}</textarea>
+            `;
+        }
         let non_right_div = document.createElement("div");
         non_right_div.innerHTML = `
-        <div style="
-            position: absolute;
-            bottom: 5;
-            left: 40;
-            background-color: wheat;
-        ">${card.power} / ${card.HP}</div>
+        <textarea disabled style="height: 150px; width: 100px; font-size: 8px;"
+        >${card.text}</textarea>
         `;
         const card_elm = createCardElm(card, right_div, "battlefield_card", non_right_div);
         if (card.fighting) {
@@ -321,4 +350,86 @@ async function join_game(player) {
     renderAll();
     waitForStageAndRender(IAM);
     showScreen("gameMenu");
+}
+
+async function draw() {
+    if (!confirm("NBRUH YOU SUREAU ABOUT TAHT MATE?")) {
+        return;
+    }
+    if (canIPlay()) {
+        gamestate.hands[IAM].push(gamestate.decks[IAM].pop());
+        renderAll();
+        await uploadGamestate();
+    }
+}
+
+function renderShop() {
+
+    shop_div.innerHTML = "";
+    for (let card of gamestate.shop_1) {
+        let right_div = document.createElement("div");
+        if (canIPlay()) {
+            const buyButton = document.createElement("button");
+            buyButton.innerHTML = `
+            Buy
+            `;
+            buyButton.onclick = async () => {
+                gamestate.shop_1 = gamestate.shop_1.filter(c => c != card);
+                gamestate.shop_1.push(gamestate.shop_deck_1.pop());
+                gamestate.hands[IAM].push({...card});
+                renderAll();
+                await uploadGamestate();
+            };
+            right_div.appendChild(buyButton);
+        }
+        const card_elm = createCardElm(card, right_div, "shop_card");
+        shop_div.appendChild(card_elm);
+    }
+
+    const divider1 = document.createElement("div");
+    divider1.innerHTML = "<hr>";
+    shop_div.appendChild(divider1);
+
+    for (let card of gamestate.shop_2) {
+        let right_div = document.createElement("div");
+        if (canIPlay()) {
+            const buyButton = document.createElement("button");
+            buyButton.innerHTML = `
+            Buy
+            `;
+            buyButton.onclick = async () => {
+                gamestate.shop_2 = gamestate.shop_2.filter(c => c != card);
+                gamestate.shop_2.push(gamestate.shop_deck_2.pop());
+                gamestate.hands[IAM].push({...card});
+                renderAll();
+                await uploadGamestate();
+            };
+            right_div.appendChild(buyButton);
+        }
+        const card_elm = createCardElm(card, right_div, "shop_card");
+        shop_div.appendChild(card_elm);
+    }
+
+    const divider2 = document.createElement("div");
+    divider2.innerHTML = "<hr>";
+    shop_div.appendChild(divider2);
+
+    for (let card of gamestate.extra_deck) {
+        let right_div = document.createElement("div");
+        if (canIPlay()) {
+            const buyButton = document.createElement("button");
+            buyButton.innerHTML = `
+            Slap into hand
+            `;
+            buyButton.onclick = async () => {
+                gamestate.hands[IAM].push({...card});
+                renderAll();
+                await uploadGamestate();
+            };
+            right_div.appendChild(buyButton);
+        }
+        const card_elm = createCardElm(card, right_div, "shop_card");
+        shop_div.appendChild(card_elm);
+    }
+
 }

@@ -21,82 +21,20 @@ let modifiers = [
 ]
 
 let list_of_cards = [
-    {
-        name: "Card 1",
-        image: "Terrible Terror.png",
-        elements: ["element 1", "element 2"],
-        card_type: "type 1",
-        mana_cost: 6,
-        rarity: "common",
-        power: 40,
-        HP: 130,
-        active_abilities: [
-            {
-            },
-            {
-
-            }
-        ],
-        passive_abilities: [
-            {
-            },
-            {
-
-            }
-        ],
-        common_abilities: ["ability 1", "ability 2"],
-    },
-    {
-        name: "Card 2",
-        image: "Tidalox.png",
-        elements: ["element 1", "element 2"],
-        card_type: "type 1",
-        mana_cost: 13,
-        rarity: "common",
-        power: 200,
-        HP: 280,
-        active_abilities: [
-            {
-            },
-            {
-
-            }
-        ],
-        passive_abilities: [
-            {
-            },
-            {
-
-            }
-        ],
-        common_abilities: ["ability 1", "ability 2"],
-    },
-    {
-        name: "Card 3",
-        image: "Gravlok.png",
-        elements: ["element 1", "element 2"],
-        card_type: "type 1",
-        mana_cost: 5,
-        rarity: "common",
-        power: 50,
-        HP: 200,
-        active_abilities: [
-            {
-            },
-            {
-
-            }
-        ],
-        passive_abilities: [
-            {
-            },
-            {
-
-            }
-        ],
-        common_abilities: ["ability 1", "ability 2"],
-    },
+    {image: "Terrible Terror.png"},
+    {image: "Tidalox.png"},
+    {image: "Gravlok.png"},
 ];
+
+let list_of_cards_2 = [
+    {image: "Terrible Terror.png"},
+    {image: "Tidalox.png"},
+    {image: "Gravlok.png"},
+]
+
+let list_of_cards_3 = [
+    {image: "Tidalox.png"},
+]
 
 function get_deck_for_player(username) {
     let deck = [];
@@ -104,6 +42,26 @@ function get_deck_for_player(username) {
         let card = list_of_cards[Math.floor(Math.random() * list_of_cards.length)];
         deck.push({...card});
     }
+    return deck;
+}
+
+function get_shop_deck_1() {
+    let deck = [];
+    for (let i = 0; i < 40; i++) {
+        let card = list_of_cards_2[Math.floor(Math.random() * list_of_cards_2.length)];
+        deck.push({...card});
+    }
+    deck = randomize_deck(deck);
+    return deck;
+}
+
+function get_shop_deck_2() {
+    let deck = [];
+    for (let i = 0; i < 40; i++) {
+        let card = list_of_cards_3[Math.floor(Math.random() * list_of_cards_3.length)];
+        deck.push({...card});
+    }
+    deck = randomize_deck(deck);
     return deck;
 }
 
@@ -125,17 +83,41 @@ function get_initial_hand(deck) {
     return hand;
 }
 
+function get_initial_shop_1(deck) {
+    let shop = [];
+    for (let i = 0; i < 4; i++) {
+        shop.push(deck.pop());
+    }
+    return shop;
+}
+
+function get_initial_shop_2(deck) {
+    let shop = [];
+    for (let i = 0; i < 2; i++) {
+        shop.push(deck.pop());
+    }
+    return shop;
+}
+
 function getInitialGamestate() {
     let player_1_deck = get_deck_for_player("<template1>");
     let player_2_deck = get_deck_for_player("<template2>");
     player_1_deck = randomize_deck(player_1_deck);
     player_2_deck = randomize_deck(player_2_deck);
+
+    let shop_deck_1 = get_shop_deck_1();
+    let shop_deck_2 = get_shop_deck_2();
     return {
         stage: "p1",
         decks: {
             "p1": player_1_deck,
             "p2": player_2_deck,
         },
+        extra_deck: [],
+        shop_deck_1: shop_deck_1,
+        shop_deck_2: shop_deck_2,
+        shop_1: get_initial_shop_1(shop_deck_1),
+        shop_2: get_initial_shop_2(shop_deck_2),
         hands: {
             "p1": get_initial_hand(player_1_deck),
             "p2": get_initial_hand(player_2_deck),
@@ -145,61 +127,21 @@ function getInitialGamestate() {
             "p1": [],
             "p2": [],
         },
-        mana_counts: {
-            "p1": 1000,
-            "p2": 1000,
-        },
-        coin_counts: {
-            "p1": 1000,
-            "p2": 1000,
-        },
-        health_points: {
-            "p1": 1000,
-            "p2": 1000,
+        counts: {
+            mana: {"p1": 1000, "p2": 1000},
+            coins: {"p1": 0, "p2": 0},
+            life: {"p1": 1000, "p2": 1000},
         },
         fightingScene: null,
     };
 }
 
-function getActionsForCard(card) {
-
-    let actions = [];
-
-    if (canIPlay()) {
-        async function onAttackRequested() {
-            if (gamestate.battlefields[getEnemy()].length == 0) {
-                gamestate.health_points[getEnemy()] -= card.power;
-            } else {
-                await moveCardToFightingPosition(card);
-                await askUserToSelectDefender();
-            }
-        }
-        actions.push({
-            name: "attack",
-            onclick: onAttackRequested,
-        });
-    }
-
-    if (canIDefend()) {
-        if (!card.defending) {
-            async function onDefendRequested() {
-                await moveCardToDefendingPosition(card);
-            }
-            actions.push({
-                name: "defend",
-                onclick: onDefendRequested,
-            });
-        } else {
-            async function onStopDefendingRequested() {
-                await moveCardToHand(card);
-            }
-            actions.push({
-                name: "stop defending",
-                onclick: onStopDefendingRequested,
-            });
-        }
-    }
-
-    return actions;
-
+function getDefaultText() {
+    return `
+Attack: default
+Defense: default
+Poisoned: no
+    `;
 }
+
+const hideForEnemy = ["mana", "coins"];

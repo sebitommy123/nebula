@@ -19,7 +19,8 @@
     <div id="gameMenu" style="display:none;">
         <div style="display:flex; flex-direction: row;">
             <div style="display:flex; flex-direction: column; width: 80vw">
-                <div id="resources_bar" style="display:flex; flex-direction: row; height:6vh; align-items: center;"></div>
+                <div id="resources_bar_p1" style="display:flex; flex-direction: row; height:3vh; align-items: center;"></div>
+                <div id="resources_bar_p2" style="display:flex; flex-direction: row; height:3vh; align-items: center;"></div>
                 <div id="opponent_battlefield" style="display:flex; flex-direction: row; height:40vh; justify-content:center; align-items: center; flex-wrap: wrap; border: 1px solid black; overflow-y: scroll;"></div>
                 <div id="player_battlefield" style="display:flex; flex-direction: row; height:40vh; justify-content:center; align-items: center; flex-wrap: wrap; border: 1px solid black; overflow-y: scroll;"></div>
                 <div id="player_cards" style="display:flex; flex-direction: row; justify-content:center; height:14vh;"> </div>
@@ -28,6 +29,7 @@
                 <div id="shop" style="display:flex; flex-direction: column; height: 85vh;"></div>
                 <div id="fun_buttons" style="display:flex; flex-direction: row; height: 15vh;">
                     <button id='next_turn_button' style="width: 100%;" onclick='next_turn()'>Next turn</button>
+                    <button id='draw_button' style="width: 100%;" onclick='draw()'>Draw</button>
                 </div>
             </div>
         </div>
