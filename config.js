@@ -117,7 +117,10 @@ let list_of_cards = [
     {image: "Ice Element.png"},
     {image: "Dragon Element.png"},
     {image: "Dark Element.png"},
-    {image: "Light Element.png"}
+    {image: "Light Element.png"},
+    {image: "Baby Yeti.png"},
+    {image: "Dhager.png"},
+    {image: "Buzz.png"}
 ];
 
 
