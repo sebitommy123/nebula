@@ -229,6 +229,10 @@ function renderHand() {
             playButton.onclick = async () => {
                 gamestate.hands[IAM] = gamestate.hands[IAM].filter(c => c != card);
                 card.text = getDefaultText();
+                card.flags = {};
+                flags.forEach(flag => {
+                    card.flags[flag] = false;
+                });
                 gamestate.battlefields[IAM].push({...card});
                 renderAll();
                 await uploadGamestate();
@@ -243,6 +247,8 @@ function renderHand() {
 function getEnemy() {
     return IAM == "p1" ? "p2" : "p1";
 }
+
+const flags = ["Tapped", "DP"];
 
 function renderBattlefield(player) {
     const battlefield = player == IAM ? player_battlefield : opponent_battlefield;
@@ -292,8 +298,27 @@ function renderBattlefield(player) {
         let non_right_div = document.createElement("div");
         non_right_div.innerHTML = `
         <textarea disabled style="height: 150px; width: 100px; font-size: 8px;"
-        >${card.text}</textarea>
+        >${card.text}</textarea><br>
         `;
+        flags.forEach(flag => {
+            const val = card.flags[flag];
+            const button = document.createElement("button");
+            button.style.backgroundColor = val ? "red" : "green";
+            button.style.fontSize = "8px";
+            button.style.border = "1px solid black";
+            button.style.padding = "4px";
+            button.style.color = "white";
+            button.innerHTML = flag;
+            button.onclick = async () => {
+                if (!canIPlay()) {
+                    return;
+                }
+                card.flags[flag] = !val;
+                renderAll();
+                await uploadGamestate();
+            }
+            non_right_div.appendChild(button);
+        });
         const card_elm = createCardElm(card, right_div, "battlefield_card", non_right_div);
         if (card.fighting) {
             card_elm.style.border = "2px solid red";
